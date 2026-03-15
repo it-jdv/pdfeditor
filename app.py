@@ -28,14 +28,6 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB limit
 def index():
     return render_template('index.html')
 
-@app.route('/test_geom')
-def test_geom():
-    return render_template('test_geom.html')
-
-@app.route('/log_geom')
-def log_geom():
-    print(f"FRONTLOG: rot={request.args.get('rot')} vp0={request.args.get('vp0')} vpNat={request.args.get('vpNat')}")
-    return "ok"
 
 @app.route('/api/analyze', methods=['POST'])
 def analyze_pdf():
@@ -249,27 +241,45 @@ def replace_text():
                         vis_rect = fitz.Rect(x, y, x + w, y + h)
                         new_text = rep.get('text', '')
                         
-                        font_size = float(rep.get('font_size', max(min(w, h) * 1.0, 7)))
+                        font_size = float(rep.get('font_size', max(h * 0.75, 7)))
                         font_name = rep.get('font_name', 'helv')
                         font_map = {'Helvetica': 'helv', 'Times': 'tiro', 'Courier': 'cour',
                                     'helv': 'helv', 'tiro': 'tiro', 'cour': 'cour'}
                         pymufont = font_map.get(font_name.split('-')[0], 'helv')
                         
-                        vis_text = fitz.Rect(vis_rect.x0 - 150, vis_rect.y0 + 3,
-                                             vis_rect.x1 + 150, vis_rect.y1 + 3 + h)
+                        # Estrategia de inserción en 3 pasos:
+                        # 1) Rect exacto del marcador
+                        # 2) Si no cabe, expandir horizontalmente (max 3×) manteniendo la fuente
+                        # 3) Solo como último recurso, reducir fuente al 70%
+                        vis_text = fitz.Rect(vis_rect.x0, vis_rect.y0 - 1,
+                                             vis_rect.x1, vis_rect.y1 + 1)
                         phys_text = (vis_text * derot).normalize()
                         
                         res = page.insert_textbox(
                             phys_text, new_text,
-                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=1, rotate=vrot
+                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
                         )
                         if res < 0:
-                            print(f"Text insertion failed res={res}, retrying smaller font")
-                            page.insert_textbox(
-                                phys_text, new_text,
-                                fontsize=max(font_size * 0.6, 4), fontname=pymufont,
-                                color=(0, 0, 0), align=1, rotate=vrot
+                            # Expandir el box horizontalmente para que quepa el texto
+                            extra = abs(res) * 1.2 + 10  # margen extra en puntos
+                            vis_wide = fitz.Rect(vis_rect.x0, vis_rect.y0 - 1,
+                                                 vis_rect.x1 + extra, vis_rect.y1 + 1)
+                            phys_wide = (vis_wide * derot).normalize()
+                            res2 = page.insert_textbox(
+                                phys_wide, new_text,
+                                fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
                             )
+                            if res2 < 0:
+                                # Último recurso: reducir fuente
+                                page.insert_textbox(
+                                    phys_wide, new_text,
+                                    fontsize=max(font_size * 0.70, 4), fontname=pymufont,
+                                    color=(0, 0, 0), align=0, rotate=vrot
+                                )
+                                print(f"  ⚠ Fallback fuente reducida for '{new_text}'")
+                            else:
+                                print(f"  ✓ Texto insertado con box expandido +{extra:.0f}pt")
+
             
             # Apply the correct rotation to EVERY page (not just the ones with replacements)
             # This ensures the output document looks the same as the preview for all pages
@@ -304,11 +314,13 @@ def download_file(filename):
         return send_file(filepath, as_attachment=True)
     return "File not found", 404
 
+PORT = 8080
+
 def open_browser():
-    webbrowser.open_new('http://localhost:5000/')
+    webbrowser.open_new(f'http://localhost:{PORT}/')
 
 if __name__ == '__main__':
     # Start the browser automatically
     if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         threading.Timer(1.25, open_browser).start()
-    app.run(port=5000, debug=True)
+    app.run(port=PORT, debug=True)

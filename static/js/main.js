@@ -181,7 +181,11 @@ function setupButtons() {
 
     ANALYZE_BTN.addEventListener('click', analyzePdf);
     if (PREVIEW_BTN) PREVIEW_BTN.addEventListener('click', togglePreview);
-    APPLY_BTN.addEventListener('click', () => applyChanges(false));
+    // Bug 2+3 fix: en modo preview, el botón Guardar usa los replacements editados
+    APPLY_BTN.addEventListener('click', () => {
+        if (isPreviewMode) confirmAndDownload();
+        else applyChanges(false);
+    });
     RESET_BTN.addEventListener('click', () => location.reload());
 }
 
@@ -437,10 +441,12 @@ async function applyChanges(isPreview = false) {
     let allReplacements = [];
     const replaceText = document.getElementById('replaceInput').value || 'art tocador';
 
+    // Bug 1 fix: el tamaño global del usuario siempre tiene prioridad
+    const defFont = document.getElementById('defaultFontInput').value;
+    const defSize = parseFloat(document.getElementById('defaultFontSizeInput').value) || 11;
+
     Object.keys(matchesData).forEach(page => {
         matchesData[page].forEach(m => {
-            const defFont = document.getElementById('defaultFontInput').value;
-            const defSize = parseFloat(document.getElementById('defaultFontSizeInput').value) || m.font_size || 11;
             allReplacements.push({
                 page: parseInt(page),
                 // orig_* = where to ERASE in the source PDF (never changes)
@@ -449,24 +455,22 @@ async function applyChanges(isPreview = false) {
                 x: m.x, y: m.y, width: m.width, height: m.height,
                 text: replaceText,
                 viewport_rotation: m.viewport_rotation || 0,
-                font_name: m.font_name || defFont,
-                font_size: m.font_size || defSize
+                font_name: defFont,
+                font_size: defSize
             });
         });
     });
 
     Object.keys(manualMatches).forEach(page => {
         manualMatches[page].forEach(m => {
-            const defFont = document.getElementById('defaultFontInput').value;
-            const defSize = parseFloat(document.getElementById('defaultFontSizeInput').value) || 11;
             allReplacements.push({
                 page: parseInt(page),
                 orig_x: m.x, orig_y: m.y, orig_width: m.width, orig_height: m.height,
                 x: m.x, y: m.y, width: m.width, height: m.height,
                 text: replaceText,
                 viewport_rotation: m.viewport_rotation || 0,
-                font_name: m.font_name || defFont,
-                font_size: m.font_size || defSize
+                font_name: defFont,
+                font_size: defSize
             });
         });
     });
@@ -508,6 +512,10 @@ async function applyChanges(isPreview = false) {
                     document.getElementById('drawBtnTop').style.display = 'none';
                 }
 
+                // Inicializar navegación
+                currentBoxIdx = -1;
+                updateNavLabel();
+
                 renderPage(currentPageNum);
 
             } else {
@@ -543,6 +551,7 @@ function exitPreviewMode() {
     currentPdfDoc = originalPdfDoc;
     previewedFilename = null;
     selectedEditBox = null;
+    currentBoxIdx = -1;
 
     document.getElementById('previewBanner').classList.remove('active');
     document.getElementById('propsPanel').classList.remove('open');
@@ -560,6 +569,60 @@ function exitPreviewMode() {
 let previewedFilename = null;
 let previewReplacements = [];
 let selectedEditBox = null;
+let currentBoxIdx = -1;
+
+// ── Actualiza el label "1/5" del navigator ──
+function updateNavLabel() {
+    const lbl = document.getElementById('boxNavLabel');
+    if (!lbl) return;
+    const total = previewReplacements.length;
+    lbl.textContent = total === 0 ? '0/0' : `${currentBoxIdx >= 0 ? currentBoxIdx + 1 : '-'}/${total}`;
+}
+
+// ── Ordena replacements por página → Y → X (lectura natural) ──
+function getSortedBoxes() {
+    return previewReplacements
+        .map((rep, origIdx) => ({ rep, origIdx }))
+        .sort((a, b) => {
+            if (a.rep.page !== b.rep.page) return a.rep.page - b.rep.page;
+            if (Math.abs(a.rep.y - b.rep.y) > 2) return a.rep.y - b.rep.y;
+            return a.rep.x - b.rep.x;
+        });
+}
+
+// ── Navega delta = +1 (siguiente) o -1 (anterior) ──
+function navigateToBox(delta) {
+    const sorted = getSortedBoxes();
+    if (sorted.length === 0) return;
+
+    currentBoxIdx = ((currentBoxIdx + delta) % sorted.length + sorted.length) % sorted.length;
+    updateNavLabel();
+
+    const { rep } = sorted[currentBoxIdx];
+
+    if (rep.page !== currentPageNum) {
+        currentPageNum = rep.page;
+        renderPage(currentPageNum);
+        // Esperar a que el render termine antes de seleccionar la caja
+        setTimeout(() => selectBoxByRep(rep), 350);
+    } else {
+        selectBoxByRep(rep);
+    }
+}
+
+// ── Encuentra el elemento DOM del box y lo selecciona ──
+function selectBoxByRep(rep) {
+    const repIdx = previewReplacements.indexOf(rep);
+    const boxes = document.querySelectorAll('.edit-box');
+    boxes.forEach(box => {
+        if (parseInt(box.getAttribute('data-idx')) === repIdx) {
+            // Scroll suave al centro del viewport
+            box.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            // Simular click para seleccionar y abrir panel de props
+            box.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        }
+    });
+}
 
 function renderEditableOverlays(pageNum) {
     OVERLAY_LAYER.innerHTML = '';
@@ -878,7 +941,7 @@ async function confirmAndDownload() {
     }
 }
 
-// Setup close props panel
+// Setup close props panel + navigation
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('closePropsPanelBtn')?.addEventListener('click', () => {
         document.getElementById('propsPanel').classList.remove('open');
@@ -887,7 +950,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('exitPreviewBtn')?.addEventListener('click', exitPreviewMode);
     document.getElementById('confirmChangesBtn')?.addEventListener('click', confirmAndDownload);
-    // Click on canvas deselects
+
+    // Navegación entre cajas
+    document.getElementById('prevBoxBtn')?.addEventListener('click', () => navigateToBox(-1));
+    document.getElementById('nextBoxBtn')?.addEventListener('click', () => navigateToBox(1));
+
+    // Click en canvas vacío deselecciona
     document.getElementById('overlayLayer')?.addEventListener('click', (e) => {
         if (e.target === document.getElementById('overlayLayer')) {
             selectedEditBox = null;

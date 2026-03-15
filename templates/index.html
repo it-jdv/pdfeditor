@@ -110,8 +110,14 @@
         <main class="viewer-area">
             <!-- Preview Mode Banner -->
             <div class="preview-banner" id="previewBanner">
-                <span>✏️ <strong>Modo Edición</strong> — Haz clic en un recuadro verde para seleccionarlo. Arrástralo
-                    para moverlo. Ajusta fuente y tamaño en el panel.</span>
+                <span>✏️ <strong>Modo Edición</strong> — Haz clic en un recuadro para seleccionarlo y editar sus
+                    propiedades.</span>
+                <div id="boxNavControls" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <button id="prevBoxBtn" class="nav-box-btn">⬅ Anterior</button>
+                    <span id="boxNavLabel"
+                        style="font-size:12px;min-width:44px;text-align:center;font-weight:600;">0/0</span>
+                    <button id="nextBoxBtn" class="nav-box-btn">Siguiente ➡</button>
+                </div>
                 <button id="exitPreviewBtn">↩ Salir</button>
                 <button class="confirm-btn" id="confirmChangesBtn">✅ Confirmar y Descargar</button>
             </div>

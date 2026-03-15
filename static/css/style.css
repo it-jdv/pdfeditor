@@ -603,3 +603,21 @@ body {
   background: #22c55e;
   color: white;
 }
+
+/* ── BOX NAVIGATION BUTTONS ── */
+.nav-box-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.nav-box-btn:hover {
+  background: rgba(255, 255, 255, 0.28) !important;
+}
