@@ -1,0 +1,28 @@
+# Entorno virtual Python
+venv/
+
+# Archivos subidos por usuarios
+uploads/*
+!uploads/.gitkeep
+
+# Carpetas de compilación PyInstaller
+dist/
+build/
+*.spec
+
+# Caché Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp

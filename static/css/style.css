@@ -1,0 +1,605 @@
+:root {
+  --bg: #f0f0ed;
+  --surface: #ffffff;
+  --border: #e2e0da;
+  --text: #1a1917;
+  --muted: #6b6860;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --ok: #16a34a;
+  --ok-hover: #15803d;
+  --danger: #dc2626;
+  --warn: #d97706;
+  --radius: 8px;
+  --sidebar-width: 320px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: var(--sidebar-width);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 20;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand .logo {
+  font-size: 22px;
+}
+
+.brand h1 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.panel h3 {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 24px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg);
+}
+
+.dropzone:hover,
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: rgba(37, 99, 235, 0.05);
+}
+
+.dropzone .icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.dropzone p {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.file-name {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ok);
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.btn {
+  width: 100%;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+}
+
+.btn-success {
+  background: var(--ok);
+  color: white;
+}
+
+.btn-success:hover {
+  background: var(--ok-hover);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  background: var(--bg);
+}
+
+.btn-icon {
+  width: auto;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.btn-icon:hover {
+  background: var(--bg);
+}
+
+.stats {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-box {
+  flex: 1;
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.stat-box span {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.stat-box label {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.help-text {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+/* ── VIEWER ── */
+.viewer-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #d8d8d5;
+  position: relative;
+}
+
+.toolbar {
+  height: 46px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.page-info {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zoom-controls span {
+  font-size: 13px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.pdf-container {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.pdf-placeholder {
+  color: var(--muted);
+  font-size: 15px;
+  margin-top: 80px;
+}
+
+.pdf-wrapper {
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.pdf-wrapper canvas {
+  display: block;
+}
+
+/* ── OVERLAY ── */
+.overlay-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+.auto-match-box {
+  position: absolute;
+  background: rgba(255, 235, 59, 0.35);
+  border: 2px solid #fbc02d;
+  pointer-events: none;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+.manual-match-box {
+  position: absolute;
+  background: rgba(33, 150, 243, 0.35);
+  border: 2px solid #1976d2;
+  cursor: pointer;
+  pointer-events: all;
+  border-radius: 2px;
+}
+
+.manual-match-box:hover::after {
+  content: '✖';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #d32f2f;
+}
+
+.selection-box {
+  border: 2px dashed rgba(33, 150, 243, 0.8);
+  background: rgba(33, 150, 243, 0.15);
+  position: absolute;
+  pointer-events: none;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  border-radius: var(--radius);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 14px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── EDIT OVERLAY BOXES (preview mode) ── */
+.edit-box {
+  position: absolute;
+  border: 2px solid var(--ok);
+  background: rgba(22, 163, 74, 0.12);
+  border-radius: 3px;
+  cursor: move;
+  user-select: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.edit-box:hover {
+  border-color: var(--accent);
+}
+
+.edit-box.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  background: rgba(37, 99, 235, 0.1);
+  z-index: 100;
+}
+
+.edit-box-label {
+  position: absolute;
+  top: -22px;
+  left: 0;
+  background: var(--ok);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-box.selected .edit-box-label {
+  background: var(--accent);
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  cursor: nwse-resize;
+}
+
+.resize-handle.nw {
+  top: -5px;
+  left: -5px;
+  cursor: nw-resize;
+}
+
+.resize-handle.ne {
+  top: -5px;
+  right: -5px;
+  cursor: ne-resize;
+}
+
+.resize-handle.sw {
+  bottom: -5px;
+  left: -5px;
+  cursor: sw-resize;
+}
+
+.resize-handle.se {
+  bottom: -5px;
+  right: -5px;
+  cursor: se-resize;
+}
+
+/* ── PROPERTIES PANEL ── */
+.props-panel {
+  position: fixed;
+  right: 16px;
+  top: 80px;
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 200;
+  display: none;
+}
+
+.props-panel.open {
+  display: block;
+}
+
+.props-panel h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.props-panel h4 button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.props-panel .prop-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.props-panel .prop-row label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  min-width: 60px;
+}
+
+.props-panel .prop-row input,
+.props-panel .prop-row select {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.props-panel .prop-row input:focus,
+.props-panel .prop-row select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.props-panel .prop-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.props-panel .prop-actions button {
+  flex: 1;
+  padding: 6px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.props-panel .prop-actions .btn-apply {
+  background: var(--ok);
+  color: white;
+}
+
+.props-panel .prop-actions .btn-delete {
+  background: var(--danger);
+  color: white;
+}
+
+/* ── PREVIEW MODE BANNER ── */
+.preview-banner {
+  display: none;
+  background: linear-gradient(90deg, #1d4ed8, #2563eb);
+  color: white;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  align-items: center;
+  gap: 12px;
+  z-index: 15;
+}
+
+.preview-banner.active {
+  display: flex;
+}
+
+.preview-banner span {
+  flex: 1;
+}
+
+.preview-banner button {
+  background: white;
+  color: var(--accent);
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.preview-banner button.confirm-btn {
+  background: #22c55e;
+  color: white;
+}
