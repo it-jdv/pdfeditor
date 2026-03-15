@@ -1,83 +1,133 @@
-# EditorPDF ArtTocador — Guía de Instalación y Compilación
+# EditorPDF ArtTocador — Instalación y Compilación
 
 Aplicación de escritorio para identificar y sustituir textos en PDFs escaneados.
 Funciona en **macOS** y **Windows** sin necesidad de instalar Python.
 
 ---
 
-## Para el usuario final
+## Descargar la app (usuarios finales)
 
-### Requisito previo: Tesseract OCR
+| Sistema | Archivo | Enlace |
+|---|---|---|
+| macOS (Apple Silicon / Intel) | `EditorPDF_ArtTocador_macOS.dmg` | [GitHub Releases](https://github.com/it-jdv/pdfeditor/releases/latest) |
+| Windows | Compilar manualmente (ver abajo) | — |
 
-#### macOS
+---
+
+## macOS — Instalación
+
+### 1. Requisito previo: Tesseract OCR
 ```bash
 # Requiere Homebrew (https://brew.sh)
 brew install tesseract
-brew install tesseract-lang   # idiomas adicionales (opcional)
 ```
 
-#### Windows
-1. Descargar instalador desde: https://github.com/UB-Mannheim/tesseract/wiki
-2. Durante la instalación, **marcar "Add to PATH"**
+### 2. Instalar la app
+1. Descargar `EditorPDF_ArtTocador_macOS.dmg` desde [Releases](https://github.com/it-jdv/pdfeditor/releases/latest)
+2. Abrir el DMG → arrastrar `EditorPDF_ArtTocador.app` a Aplicaciones
+3. **Primera vez:** clic derecho sobre la app → **Abrir** (para superar Gatekeeper)
+4. El navegador abrirá `http://localhost:5000` automáticamente
+
+---
+
+## Windows — Compilar el instalador
+
+> El `.exe` debe generarse **en una máquina Windows** (PyInstaller produce binarios nativos).
+
+### 1. Requisitos previos
+
+#### Python 3.10+
+1. Descargar desde https://www.python.org/downloads/windows/
+2. Durante la instalación: **marcar "Add Python to PATH"**
+3. Verificar en PowerShell:
+   ```powershell
+   python --version
+   ```
+
+#### Tesseract OCR
+1. Descargar instalador desde https://github.com/UB-Mannheim/tesseract/wiki
+   - Archivo: `tesseract-ocr-w64-setup-5.x.x.exe`
+2. Durante la instalación:
+   - **Marcar "Add to system PATH"**
+   - En "Additional language data": seleccionar **Spanish** si se necesita OCR en español
 3. Reiniciar el equipo
+4. Verificar en PowerShell:
+   ```powershell
+   tesseract --version
+   ```
 
----
+### 2. Clonar el repositorio
 
-### Ejecutar la app
-
-#### macOS
-1. Abrir `EditorPDF_ArtTocador.dmg`
-2. Arrastrar `EditorPDF_ArtTocador.app` a Aplicaciones
-3. Primera vez: clic derecho → **Abrir** (para superar Gatekeeper)
-4. El navegador se abre en `http://localhost:5000`
-
-#### Windows
-1. Ejecutar `EditorPDF_ArtTocador.exe`
-2. Si el antivirus bloquea: **Más información → Ejecutar de todas formas**
-3. El navegador se abre en `http://localhost:5000`
-
----
-
-## Para desarrolladores: compilar desde el código fuente
-
-### Requisitos
-- Python 3.10+
-- Tesseract OCR instalado (ver arriba)
-
-### Pasos (macOS y Windows)
-
-```bash
-# 1. Clonar el repositorio
+```powershell
 git clone https://github.com/it-jdv/pdfeditor.git
 cd pdfeditor
-
-# 2. Crear y activar entorno virtual
-python -m venv venv
-
-# macOS/Linux:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# 3. Instalar dependencias
-pip install -r requirements.txt
-
-# 4. Ejecutar en modo desarrollo
-python app.py
-# → abre http://localhost:5000
 ```
 
-### Compilar instalador
+O descargar el ZIP desde GitHub → **Code → Download ZIP** y descomprimir.
 
-```bash
+### 3. Crear entorno virtual e instalar dependencias
+
+```powershell
+python -m venv venv
+venv\Scripts\activate
+
+pip install -r requirements.txt
+```
+
+### 4. Probar en modo desarrollo (opcional)
+
+```powershell
+python app.py
+```
+
+Abrir http://localhost:5000 en el navegador.
+
+### 5. Compilar el ejecutable `.exe`
+
+```powershell
 python build_app.py
 ```
 
-- **macOS** → `dist/EditorPDF_ArtTocador.app` + `dist/EditorPDF_ArtTocador.dmg`
-- **Windows** → `dist/EditorPDF_ArtTocador.exe`
+El proceso tarda 2-5 minutos. Al terminar aparece:
 
-> El instalador debe compilarse **en el sistema operativo de destino**.
-> Para el `.exe` de Windows es necesario ejecutar `build_app.py` en una máquina Windows.
+```
+dist/
+└── EditorPDF_ArtTocador.exe   ← ejecutable único (~40 MB)
+```
+
+### 6. Distribuir
+
+Basta con copiar `EditorPDF_ArtTocador.exe`. No requiere instalación en el equipo destino.
+
+> **Nota sobre antivirus:** Windows Defender o antivirus pueden marcar el `.exe` como sospechoso
+> (falso positivo frecuente con PyInstaller). En ese caso:
+> - Windows SmartScreen → **Más información → Ejecutar de todas formas**
+> - O firmar el ejecutable con un certificado de código (Code Signing Certificate)
+
+---
+
+## Para desarrolladores — Compilar desde el código fuente (macOS)
+
+```bash
+# 1. Clonar
+git clone https://github.com/it-jdv/pdfeditor.git
+cd pdfeditor
+
+# 2. Entorno virtual
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. Dependencias
+pip install -r requirements.txt
+
+# 4. Modo desarrollo
+python app.py   # → http://localhost:5000
+
+# 5. Compilar .app + .dmg
+python build_app.py
+# Genera: dist/EditorPDF_ArtTocador.app
+#         dist/EditorPDF_ArtTocador.dmg
+```
 
 ---
 
@@ -87,6 +137,7 @@ python build_app.py
 app.py              — Backend Flask (OCR, redacción, reemplazo de texto)
 build_app.py        — Script de compilación con PyInstaller
 requirements.txt    — Dependencias Python
+INSTALL.md          — Esta guía
 templates/          — HTML de la interfaz
 static/css/         — Estilos
 static/js/          — Lógica del visor PDF (PDF.js)
