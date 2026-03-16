@@ -323,7 +323,7 @@ def replace_text():
 
                         res = page.insert_textbox(
                             phys_insert, new_text,
-                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0
+                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
                         )
                         if res < 0:
                             # Todavía no cabe: reducir fuente hasta que entre
@@ -331,7 +331,7 @@ def replace_text():
                                 res2 = page.insert_textbox(
                                     phys_insert, new_text,
                                     fontsize=max(font_size * scale, 4),
-                                    fontname=pymufont, color=(0, 0, 0), align=0
+                                    fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
                                 )
                                 print(f"  ↳ retry scale={scale:.0%} → res={res2:.0f}")
                                 if res2 >= 0:
