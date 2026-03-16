@@ -14,6 +14,22 @@ try:
 except ImportError:
     import fitz               # PyMuPDF < 1.24 (nombre legacy)
 
+# --- Auto-detectar Tesseract en Windows si no está en PATH ---
+if sys.platform.startswith('win'):
+    _TESSERACT_CANDIDATES = [
+        r'C:\Program Files\Tesseract-OCR\tesseract.exe',
+        r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
+        os.path.expanduser(r'~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe'),
+        os.path.expanduser(r'~\AppData\Local\Tesseract-OCR\tesseract.exe'),
+    ]
+    for _candidate in _TESSERACT_CANDIDATES:
+        if os.path.isfile(_candidate):
+            pytesseract.pytesseract.tesseract_cmd = _candidate
+            print(f"[INFO] Tesseract encontrado en: {_candidate}")
+            break
+    else:
+        print("[WARN] Tesseract no encontrado en rutas comunes. Asegúrate de instalarlo.")
+
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
     static_folder = os.path.join(sys._MEIPASS, 'static')
