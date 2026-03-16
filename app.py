@@ -121,6 +121,7 @@ def analyze_pdf():
             # Corre OCR si no hay coincidencias nativas O si el PDF no tiene texto nativo real
             page_text = page.get_text().strip()
             run_ocr = (not page_results["matches"]) or (not page_text)
+            print(f"[DEBUG] Pág {page_num+1}: texto_nativo={bool(page_text)} | matches_nativos={len(page_results['matches'])} | run_ocr={run_ocr}")
             if run_ocr:
                 try:
                     # Zoom alto para mejor calidad en PDFs escaneados
@@ -128,16 +129,24 @@ def analyze_pdf():
                     mat = fitz.Matrix(zoom, zoom)
                     pix = page.get_pixmap(matrix=mat)
                     img = Image.open(io.BytesIO(pix.tobytes("png")))
+                    print(f"[DEBUG] Pág {page_num+1}: imagen OCR {img.size[0]}x{img.size[1]}px")
 
                     # Intentar con español+inglés, caer en default si el lang pack no está instalado
+                    lang_used = 'spa+eng'
                     try:
                         ocr_data = pytesseract.image_to_data(
                             img, lang='spa+eng', output_type=pytesseract.Output.DICT
                         )
                     except pytesseract.TesseractError:
+                        lang_used = 'default(eng)'
                         ocr_data = pytesseract.image_to_data(
                             img, output_type=pytesseract.Output.DICT
                         )
+
+                    # Tokens reconocidos (no vacíos)
+                    all_tokens = [t.strip() for t in ocr_data['text'] if t.strip()]
+                    print(f"[DEBUG] Pág {page_num+1}: lang={lang_used} | tokens_ocr={len(all_tokens)} | buscando={word_list}")
+                    print(f"[DEBUG] Pág {page_num+1}: primeros 40 tokens OCR: {all_tokens[:40]}")
 
                     n_boxes = len(ocr_data['level'])
                     for i in range(n_boxes):
@@ -159,6 +168,7 @@ def analyze_pdf():
                             ocr_y = ocr_data['top'][i] / zoom
                             ocr_w = ocr_data['width'][i] / zoom
                             ocr_h = ocr_data['height'][i] / zoom
+                            print(f"[DEBUG] Pág {page_num+1}: MATCH '{matched_word}' <- token='{raw}' en ({ocr_x:.0f},{ocr_y:.0f})")
 
                             page_results["matches"].append({
                                 "word": matched_word,
@@ -173,7 +183,7 @@ def analyze_pdf():
                             })
                             total_found += 1
                 except Exception as e:
-                    print(f"OCR failed for page {page_num}: {e}")
+                    print(f"[ERROR] OCR falló en pág {page_num+1}: {e}")
                     
             results.append(page_results)
         
@@ -325,6 +335,56 @@ def replace_text():
         "download_url": f"/api/download/{out_filename}",
         "filename": out_filename
     })
+
+@app.route('/api/debug')
+def debug_info():
+    """Diagnóstico del entorno: Tesseract, idiomas, PyMuPDF, Python."""
+    import subprocess, platform
+    info = {}
+
+    # Python
+    info['python'] = sys.version
+
+    # PyMuPDF
+    try:
+        info['pymupdf'] = fitz.version
+    except Exception as e:
+        info['pymupdf'] = f'ERROR: {e}'
+
+    # Tesseract — ruta y versión
+    try:
+        tess_cmd = pytesseract.get_tesseract_version()
+        info['tesseract_version'] = str(tess_cmd)
+    except Exception as e:
+        info['tesseract_version'] = f'ERROR: {e}'
+
+    try:
+        info['tesseract_cmd'] = pytesseract.pytesseract.tesseract_cmd
+    except Exception:
+        info['tesseract_cmd'] = 'default'
+
+    # Idiomas instalados en Tesseract
+    try:
+        langs = pytesseract.get_languages(config='')
+        info['tesseract_languages'] = langs
+    except Exception as e:
+        info['tesseract_languages'] = f'ERROR: {e}'
+
+    # Test rápido de OCR sobre imagen blanca (1 pixel)
+    try:
+        test_img = Image.new('RGB', (200, 50), color=(255, 255, 255))
+        ocr_out = pytesseract.image_to_string(test_img)
+        info['ocr_test'] = 'OK (imagen en blanco procesada sin error)'
+    except Exception as e:
+        info['ocr_test'] = f'ERROR: {e}'
+
+    # Variables de entorno relevantes
+    info['PATH_has_tesseract'] = 'tesseract' in os.environ.get('PATH', '').lower() or \
+                                  any('tesseract' in p.lower() for p in os.environ.get('PATH','').split(os.pathsep))
+    info['platform'] = platform.platform()
+
+    return jsonify(info)
+
 
 @app.route('/api/preview/<filename>')
 def preview_file(filename):
