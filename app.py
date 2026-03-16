@@ -3,6 +3,7 @@ import sys
 import threading
 import webbrowser
 import json
+import re
 import pytesseract
 from PIL import Image
 import io
@@ -117,28 +118,50 @@ def analyze_pdf():
                     total_found += 1
                     
             # --- LOCAL OCR WITH TESSERACT FALLBACK ---
-            if not page_results["matches"]:
+            # Corre OCR si no hay coincidencias nativas O si el PDF no tiene texto nativo real
+            page_text = page.get_text().strip()
+            run_ocr = (not page_results["matches"]) or (not page_text)
+            if run_ocr:
                 try:
-                    # high resolution image for better OCR
-                    zoom = 2.0
+                    # Zoom alto para mejor calidad en PDFs escaneados
+                    zoom = 3.0
                     mat = fitz.Matrix(zoom, zoom)
                     pix = page.get_pixmap(matrix=mat)
                     img = Image.open(io.BytesIO(pix.tobytes("png")))
-                    
-                    ocr_data = pytesseract.image_to_data(img, output_type=pytesseract.Output.DICT)
-                    
+
+                    # Intentar con español+inglés, caer en default si el lang pack no está instalado
+                    try:
+                        ocr_data = pytesseract.image_to_data(
+                            img, lang='spa+eng', output_type=pytesseract.Output.DICT
+                        )
+                    except pytesseract.TesseractError:
+                        ocr_data = pytesseract.image_to_data(
+                            img, output_type=pytesseract.Output.DICT
+                        )
+
                     n_boxes = len(ocr_data['level'])
                     for i in range(n_boxes):
-                        text_val = ocr_data['text'][i].strip().lower()
-                        if text_val and text_val in word_list:
-                            # Scale back coordinates to PDF space
+                        # Limpiar puntuación pegada al token OCR antes de comparar
+                        raw = ocr_data['text'][i].strip()
+                        text_val = re.sub(r'[^a-záéíóúüñA-ZÁÉÍÓÚÜÑ0-9]', '', raw).lower()
+                        if not text_val:
+                            continue
+
+                        matched_word = None
+                        for w in word_list:
+                            # Coincidencia exacta (sin puntuación) o el token contiene la palabra buscada
+                            if text_val == w or text_val.startswith(w) or text_val.endswith(w):
+                                matched_word = w
+                                break
+
+                        if matched_word:
                             ocr_x = ocr_data['left'][i] / zoom
                             ocr_y = ocr_data['top'][i] / zoom
                             ocr_w = ocr_data['width'][i] / zoom
                             ocr_h = ocr_data['height'][i] / zoom
-                            
+
                             page_results["matches"].append({
-                                "word": text_val,
+                                "word": matched_word,
                                 "x": ocr_x,
                                 "y": ocr_y,
                                 "width": ocr_w,
