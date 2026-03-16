@@ -110,13 +110,22 @@
         <main class="viewer-area">
             <!-- Preview Mode Banner -->
             <div class="preview-banner" id="previewBanner">
-                <span>✏️ <strong>Modo Edición</strong> — Haz clic en un recuadro para seleccionarlo y editar sus
-                    propiedades.</span>
+                <span>✏️ <strong>Modo Edición</strong> — Haz clic en un recuadro para editar.</span>
                 <div id="boxNavControls" style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     <button id="prevBoxBtn" class="nav-box-btn">⬅ Anterior</button>
                     <span id="boxNavLabel"
                         style="font-size:12px;min-width:44px;text-align:center;font-weight:600;">0/0</span>
                     <button id="nextBoxBtn" class="nav-box-btn">Siguiente ➡</button>
+                </div>
+                <!-- Aplicar mismo texto a TODAS las etiquetas -->
+                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                    <input id="applyAllText" type="text" placeholder="Texto para todas…"
+                        style="padding:4px 7px;border:1px solid #cbd5e1;border-radius:5px;font-size:12px;width:140px;">
+                    <button id="applyAllBtn"
+                        style="padding:4px 10px;background:#2563eb;color:#fff;border:none;border-radius:5px;
+                               font-size:12px;cursor:pointer;white-space:nowrap;">
+                        🔁 Aplicar a todas
+                    </button>
                 </div>
                 <button id="exitPreviewBtn">↩ Salir</button>
                 <button class="confirm-btn" id="confirmChangesBtn">✅ Confirmar y Descargar</button>

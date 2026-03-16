@@ -943,6 +943,25 @@ async function confirmAndDownload() {
 
 // Setup close props panel + navigation
 document.addEventListener('DOMContentLoaded', () => {
+    // ── Aplicar mismo texto a TODAS las etiquetas del preview ──
+    document.getElementById('applyAllBtn')?.addEventListener('click', () => {
+        const txt = document.getElementById('applyAllText').value.trim();
+        if (!txt) {
+            alert('Escribe el texto que quieres aplicar a todas las etiquetas.');
+            return;
+        }
+        previewReplacements.forEach(rep => { rep.text = txt; });
+        // Actualizar los labels visibles en la página actual
+        document.querySelectorAll('.edit-box-label').forEach(lbl => {
+            lbl.textContent = txt;
+        });
+        // Si hay una caja seleccionada, actualizar el panel de propiedades
+        if (selectedEditBox) {
+            document.getElementById('propText').value = txt;
+        }
+        alert(`Texto "${txt}" aplicado a las ${previewReplacements.length} etiquetas.`);
+    });
+
     document.getElementById('closePropsPanelBtn')?.addEventListener('click', () => {
         document.getElementById('propsPanel').classList.remove('open');
         selectedEditBox = null;

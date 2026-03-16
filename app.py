@@ -291,46 +291,55 @@ def replace_text():
                     for rep in reps:
                         x, y, w, h = rep['x'], rep['y'], rep['width'], rep['height']
                         vis_rect = fitz.Rect(x, y, x + w, y + h)
-                        new_text = rep.get('text', '')
-                        
-                        font_size = float(rep.get('font_size', max(h * 0.75, 7)))
+                        new_text = rep.get('text') or ''
+
+                        font_size = float(rep.get('font_size') or max(h * 0.75, 8))
+                        font_size = max(font_size, 7.0)   # mínimo legible
                         font_name = rep.get('font_name', 'helv')
                         font_map = {'Helvetica': 'helv', 'Times': 'tiro', 'Courier': 'cour',
                                     'helv': 'helv', 'tiro': 'tiro', 'cour': 'cour'}
                         pymufont = font_map.get(font_name.split('-')[0], 'helv')
-                        
-                        # Estrategia de inserción en 3 pasos:
-                        # 1) Rect exacto del marcador
-                        # 2) Si no cabe, expandir horizontalmente (max 3×) manteniendo la fuente
-                        # 3) Solo como último recurso, reducir fuente al 70%
-                        vis_text = fitz.Rect(vis_rect.x0, vis_rect.y0 - 1,
-                                             vis_rect.x1, vis_rect.y1 + 1)
-                        phys_text = (vis_text * derot).normalize()
-                        
+
+                        # ── Calcular ancho mínimo REAL en puntos tipográficos ──────────────
+                        # Ancho aproximado por carácter en Helvetica ≈ font_size × 0.55
+                        min_w = max(vis_rect.width, len(new_text) * font_size * 0.60 + 6)
+                        min_h = max(vis_rect.height + 4, font_size * 1.5)
+
+                        # Construir rect de inserción ajustado para no salir de la página
+                        ins_x0 = vis_rect.x0
+                        ins_x1 = ins_x0 + min_w
+                        if ins_x1 > page.rect.width:          # se sale por la derecha
+                            ins_x0 = max(0.0, page.rect.width - min_w)
+                            ins_x1 = page.rect.width
+
+                        ins_y0 = vis_rect.y0 - 2
+                        ins_y1 = ins_y0 + min_h
+                        if ins_y1 > page.rect.height:
+                            ins_y1 = page.rect.height
+                            ins_y0 = max(0.0, ins_y1 - min_h)
+
+                        vis_insert = fitz.Rect(ins_x0, ins_y0, ins_x1, ins_y1)
+                        phys_insert = (vis_insert * derot).normalize()
+
                         res = page.insert_textbox(
-                            phys_text, new_text,
-                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
+                            phys_insert, new_text,
+                            fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0
                         )
                         if res < 0:
-                            # Expandir el box horizontalmente para que quepa el texto
-                            extra = abs(res) * 1.2 + 10  # margen extra en puntos
-                            vis_wide = fitz.Rect(vis_rect.x0, vis_rect.y0 - 1,
-                                                 vis_rect.x1 + extra, vis_rect.y1 + 1)
-                            phys_wide = (vis_wide * derot).normalize()
-                            res2 = page.insert_textbox(
-                                phys_wide, new_text,
-                                fontsize=font_size, fontname=pymufont, color=(0, 0, 0), align=0, rotate=vrot
-                            )
-                            if res2 < 0:
-                                # Último recurso: reducir fuente
-                                page.insert_textbox(
-                                    phys_wide, new_text,
-                                    fontsize=max(font_size * 0.70, 4), fontname=pymufont,
-                                    color=(0, 0, 0), align=0, rotate=vrot
+                            # Todavía no cabe: reducir fuente hasta que entre
+                            for scale in (0.85, 0.70, 0.55):
+                                res2 = page.insert_textbox(
+                                    phys_insert, new_text,
+                                    fontsize=max(font_size * scale, 4),
+                                    fontname=pymufont, color=(0, 0, 0), align=0
                                 )
-                                print(f"  ⚠ Fallback fuente reducida for '{new_text}'")
+                                print(f"  ↳ retry scale={scale:.0%} → res={res2:.0f}")
+                                if res2 >= 0:
+                                    break
                             else:
-                                print(f"  ✓ Texto insertado con box expandido +{extra:.0f}pt")
+                                print(f"  ⚠ No cupo '{new_text}' en {vis_insert} — se insertó de todos modos")
+                        else:
+                            print(f"  ✓ '{new_text}' insertado en {vis_insert} fs={font_size:.1f}")
 
             
             # Apply the correct rotation to EVERY page (not just the ones with replacements)
