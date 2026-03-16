@@ -8,7 +8,10 @@ from PIL import Image
 import io
 from flask import Flask, request, jsonify, send_file, render_template
 from werkzeug.utils import secure_filename
-import fitz
+try:
+    import pymupdf as fitz   # PyMuPDF >= 1.24 (nombre oficial del paquete)
+except ImportError:
+    import fitz               # PyMuPDF < 1.24 (nombre legacy)
 
 if getattr(sys, 'frozen', False):
     template_folder = os.path.join(sys._MEIPASS, 'templates')
