@@ -481,15 +481,15 @@ async function applyChanges(isPreview = false) {
         return;
     }
 
-    const formData = new FormData();
-    formData.append('file', currentFile);
-    formData.append('replacements', JSON.stringify(allReplacements));
-    formData.append('rotation', document.getElementById('rotationInput').value);
-
     try {
         const res = await fetch('/api/replace', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filename: backendFileId,
+                replacements: allReplacements,
+                rotation: document.getElementById('rotationInput').value
+            })
         });
         const data = await res.json();
 
@@ -915,13 +915,16 @@ async function confirmAndDownload() {
     }
     showLoading('Generando PDF final...');
 
-    const formData = new FormData();
-    formData.append('file', currentFile);
-    formData.append('replacements', JSON.stringify(previewReplacements));
-    formData.append('rotation', document.getElementById('rotationInput').value);
-
     try {
-        const res = await fetch('/api/replace', { method: 'POST', body: formData });
+        const res = await fetch('/api/replace', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filename: backendFileId,
+                replacements: previewReplacements,
+                rotation: document.getElementById('rotationInput').value
+            })
+        });
         const data = await res.json();
         if (data.status === 'success') {
             const link = document.createElement('a');
