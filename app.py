@@ -247,7 +247,9 @@ def replace_text():
     if forced_rotation == 'auto' and request.json and 'rotation' in request.json:
         forced_rotation = request.json.get('rotation', 'auto')
 
-    out_filename = filename.replace('.pdf', '_corregido.pdf')
+    import time
+    ts = int(time.time() * 1000)
+    out_filename = filename.replace('.pdf', f'_corregido_{ts}.pdf')
     out_filepath = os.path.join(app.config['UPLOAD_FOLDER'], out_filename)
 
     
