@@ -431,7 +431,5 @@ def open_browser():
     webbrowser.open_new(f'http://localhost:{PORT}/')
 
 if __name__ == '__main__':
-    # Start the browser automatically
-    if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-        threading.Timer(1.25, open_browser).start()
-    app.run(port=PORT, debug=True)
+    threading.Timer(1.25, open_browser).start()
+    app.run(port=PORT, debug=False, use_reloader=False, threaded=True)

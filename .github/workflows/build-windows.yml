@@ -1,0 +1,45 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # permite lanzarlo manualmente desde GitHub
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Instalar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip uninstall pathlib -y || true
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Compilar EXE con PyInstaller
+        run: python build_app.py
+
+      - name: Subir EXE como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: EditorPDF_ArtTocador_Windows
+          path: dist\EditorPDF_ArtTocador.exe
+          retention-days: 30
+
+      - name: Publicar en GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-windows
+          name: "EditorPDF ArtTocador — Windows (último build)"
+          body: "Build automático generado desde el último commit en main."
+          files: dist\EditorPDF_ArtTocador.exe
+          make_latest: true
