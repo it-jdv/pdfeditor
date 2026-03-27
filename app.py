@@ -44,6 +44,21 @@ app.config['UPLOAD_FOLDER'] = os.path.join(base_dir, 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50 MB limit
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    import traceback
+    print(f"[ERROR] Excepción no capturada: {traceback.format_exc()}")
+    return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.errorhandler(415)
+def unsupported_media(e):
+    print(f"[ERROR] 415 Unsupported Media Type: {e}")
+    return jsonify({"status": "error", "message": f"415: {str(e)}"}), 415
+
+@app.errorhandler(413)
+def request_too_large(e):
+    return jsonify({"status": "error", "message": "Archivo demasiado grande (máx 50 MB)"}), 413
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -218,7 +233,13 @@ def analyze_pdf():
 @app.route('/api/replace', methods=['POST'])
 def replace_text():
     import json
-    if 'file' in request.files:
+    print(f"[DEBUG] /api/replace Content-Type: {request.content_type}")
+    try:
+        has_file = 'file' in request.files
+    except Exception as e:
+        print(f"[ERROR] No se pudo leer request.files: {e}")
+        has_file = False
+    if has_file:
         file = request.files['file']
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
