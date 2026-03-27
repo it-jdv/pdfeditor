@@ -22,6 +22,8 @@ if __name__ == '__main__':
         '--hidden-import=PIL.Image',
         '--hidden-import=pytesseract',
         '--hidden-import=fitz',
+        '--hidden-import=waitress',
+        '--collect-all=waitress',
         '--clean',
     ]
 

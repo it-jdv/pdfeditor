@@ -434,4 +434,8 @@ def open_browser():
 
 if __name__ == '__main__':
     threading.Timer(1.25, open_browser).start()
-    app.run(port=PORT, debug=False, use_reloader=False, threaded=True)
+    try:
+        from waitress import serve
+        serve(app, host='127.0.0.1', port=PORT, threads=4)
+    except ImportError:
+        app.run(port=PORT, debug=False, use_reloader=False, threaded=True)
