@@ -303,7 +303,10 @@ def replace_text():
                         oy = rep.get('orig_y', rep['y'])
                         ow = rep.get('orig_width', rep['width'])
                         oh = rep.get('orig_height', rep['height'])
-                        orig_vis_rect = fitz.Rect(ox, oy, ox + ow, oy + oh)
+                        # Inset 1pt on each side para no tapar bordes de tablas/recuadros
+                        inset = 1.0
+                        orig_vis_rect = fitz.Rect(ox + inset, oy + inset,
+                                                  ox + ow - inset, oy + oh - inset)
                         phys_rect = (orig_vis_rect * derot).normalize()
                         print(f"Redacting original (vis={orig_vis_rect} -> phys={phys_rect}) at {vrot}deg")
                         page.add_redact_annot(phys_rect, fill=(1, 1, 1))
