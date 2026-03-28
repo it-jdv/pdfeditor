@@ -439,41 +439,45 @@ async function applyChanges(isPreview = false) {
     showLoading('Aplicando cambios...');
 
     let allReplacements = [];
-    const replaceText = document.getElementById('replaceInput').value || 'art tocador';
 
-    // Bug 1 fix: el tamaño global del usuario siempre tiene prioridad
-    const defFont = document.getElementById('defaultFontInput').value;
-    const defSize = parseFloat(document.getElementById('defaultFontSizeInput').value) || 11;
+    // Si ya hay un preview activo con edits del panel de propiedades, preservarlos
+    if (isPreviewMode && previewReplacements.length > 0) {
+        allReplacements = previewReplacements;
+    } else {
+        const replaceText = document.getElementById('replaceInput').value || 'art tocador';
 
-    Object.keys(matchesData).forEach(page => {
-        matchesData[page].forEach(m => {
-            allReplacements.push({
-                page: parseInt(page),
-                // orig_* = where to ERASE in the source PDF (never changes)
-                orig_x: m.x, orig_y: m.y, orig_width: m.width, orig_height: m.height,
-                // x/y/w/h = where to INSERT text (user can drag to adjust)
-                x: m.x, y: m.y, width: m.width, height: m.height,
-                text: replaceText,
-                viewport_rotation: m.viewport_rotation || 0,
-                font_name: defFont,
-                font_size: defSize
+        // Bug 1 fix: el tamaño global del usuario siempre tiene prioridad
+        const defFont = document.getElementById('defaultFontInput').value;
+        const defSize = parseFloat(document.getElementById('defaultFontSizeInput').value) || 11;
+
+        Object.keys(matchesData).forEach(page => {
+            matchesData[page].forEach(m => {
+                allReplacements.push({
+                    page: parseInt(page),
+                    orig_x: m.x, orig_y: m.y, orig_width: m.width, orig_height: m.height,
+                    x: m.x, y: m.y, width: m.width, height: m.height,
+                    text: replaceText,
+                    viewport_rotation: m.viewport_rotation || 0,
+                    font_name: defFont,
+                    font_size: defSize
+                });
             });
         });
-    });
 
-    Object.keys(manualMatches).forEach(page => {
-        manualMatches[page].forEach(m => {
-            allReplacements.push({
-                page: parseInt(page),
-                orig_x: m.x, orig_y: m.y, orig_width: m.width, orig_height: m.height,
-                x: m.x, y: m.y, width: m.width, height: m.height,
-                text: replaceText,
-                viewport_rotation: m.viewport_rotation || 0,
-                font_name: defFont,
-                font_size: defSize
+        Object.keys(manualMatches).forEach(page => {
+            manualMatches[page].forEach(m => {
+                allReplacements.push({
+                    page: parseInt(page),
+                    orig_x: m.x, orig_y: m.y, orig_width: m.width, orig_height: m.height,
+                    x: m.x, y: m.y, width: m.width, height: m.height,
+                    text: replaceText,
+                    viewport_rotation: m.viewport_rotation || 0,
+                    font_name: defFont,
+                    font_size: defSize
+                });
             });
         });
-    });
+    }
 
     if (allReplacements.length === 0) {
         alert("No hay ningún reemplazo que aplicar.");
@@ -893,7 +897,10 @@ function applyPropsToSelected() {
     el.style.height = (rep.height * currentZoom) + 'px';
 
     const label = el.querySelector('.edit-box-label');
-    if (label) label.textContent = rep.text || '(vacío)';
+    if (label) {
+        label.textContent = rep.text || '(vacío)';
+        label.style.fontSize = Math.max(rep.font_size * currentZoom / 72 * 96, 7) + 'px';
+    }
 }
 
 // Delete selected box from preview replacements
